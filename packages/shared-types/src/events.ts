@@ -17,6 +17,7 @@ export enum WsEvent {
   MATCH_STARTED = 'match:started',
 
   NOTIFICATION = 'notification',
+  FEED_NEW_EVENT = 'feed:new_event',
   PING = 'ping',
   PONG = 'pong',
 }
@@ -34,6 +35,18 @@ export enum NotificationType {
   SYSTEM_ANNOUNCEMENT = 'SYSTEM_ANNOUNCEMENT',
 }
 
+export enum FeedEventType {
+  USER_FOLLOWED = 'USER_FOLLOWED',
+  TOURNAMENT_CREATED = 'TOURNAMENT_CREATED',
+  TOURNAMENT_JOINED = 'TOURNAMENT_JOINED',
+  TOURNAMENT_WON = 'TOURNAMENT_WON',
+  MATCH_COMPLETED = 'MATCH_COMPLETED',
+  MATCH_WON = 'MATCH_WON',
+  LEVEL_UP = 'LEVEL_UP',
+  RANK_CHANGED = 'RANK_CHANGED',
+  ACHIEVEMENT = 'ACHIEVEMENT',
+}
+
 export interface IWsPayload<T = any> {
   event: WsEvent;
   data: T;
@@ -49,4 +62,20 @@ export interface INotification {
   data?: Record<string, any>;
   read: boolean;
   createdAt: Date;
+}
+
+export interface IFeedEvent {
+  id: string;
+  actorId: string;
+  type: FeedEventType;
+  title: string;
+  summary: string;
+  payload?: Record<string, any>;
+  createdAt: Date;
+  actor?: {
+    id: string;
+    username: string;
+    avatarUrl?: string;
+    level: number;
+  };
 }

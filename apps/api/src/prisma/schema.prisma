@@ -56,6 +56,18 @@ enum NotificationType {
   SYSTEM_ANNOUNCEMENT
 }
 
+enum FeedEventType {
+  USER_FOLLOWED
+  TOURNAMENT_CREATED
+  TOURNAMENT_JOINED
+  TOURNAMENT_WON
+  MATCH_COMPLETED
+  MATCH_WON
+  LEVEL_UP
+  RANK_CHANGED
+  ACHIEVEMENT
+}
+
 model User {
   id            String     @id @default(uuid())
   username      String     @unique
@@ -81,6 +93,7 @@ model User {
   followers           Follow[] @relation("Following")
   following           Follow[] @relation("Followers")
   notifications       Notification[]
+  feedEvents          FeedEvent[] @relation("FeedActor")
 
   @@map("users")
 }
@@ -149,6 +162,22 @@ model Notification {
   @@index([userId, read, createdAt(sort: Desc)])
   @@index([userId, createdAt(sort: Desc)])
   @@map("notifications")
+}
+
+model FeedEvent {
+  id        String        @id @default(uuid())
+  actorId   String
+  type      FeedEventType
+  title     String
+  summary   String
+  payload   Json?
+  createdAt DateTime      @default(now())
+
+  actor     User          @relation("FeedActor", fields: [actorId], references: [id], onDelete: Cascade)
+
+  @@index([actorId, createdAt(sort: Desc)])
+  @@index([createdAt(sort: Desc)])
+  @@map("feed_events")
 }
 
 model Tournament {
