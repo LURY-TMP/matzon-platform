@@ -1,0 +1,65 @@
+version: "3.9"
+
+services:
+  # ========== DATABASES ==========
+  postgres:
+    image: postgres:16-alpine
+    container_name: matzon-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: matzon
+      POSTGRES_PASSWORD: matzon_dev_2026
+      POSTGRES_DB: matzon
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U matzon"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mongo:
+    image: mongo:7-jammy
+    container_name: matzon-mongo
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: matzon
+      MONGO_INITDB_ROOT_PASSWORD: matzon_dev_2026
+      MONGO_INITDB_DATABASE: matzon
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ========== API ==========
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    container_name: matzon-api
+    restart: unless-stopped
+    ports:
+      - "4000:4000"
+    environment:
+      NODE_ENV: development
+      API_PORT: 4000
+      DATABASE_URL: postgresql://matzon:matzon_dev_2026@postgres:5432/matzon
+      MONGODB_URI: mongodb://matzon:matzon_dev_2026@mongo:27017/matzon?authSource=admin
+      JWT_SECRET: matzon-dev-secret-change-in-production
+      CORS_ORIGIN: http://localhost:3000
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+  mongo_data:
