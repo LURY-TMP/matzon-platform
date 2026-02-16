@@ -160,3 +160,9 @@ export const feedApi = {
   userEvents: (userId: string, cursor?: string) =>
     api<any>(`/feed/user/${userId}${cursor ? `?cursor=${cursor}` : ''}`, { skipAuth: true }),
 };
+
+export const reputationApi = {
+  me: () => api<any>('/reputation/me'),
+  getUser: (userId: string) => api<any>(`/reputation/user/${userId}`, { skipAuth: true }),
+  followLimit: () => api<{ allowed: boolean; limit: number; current: number }>('/reputation/me/follow-limit'),
+};

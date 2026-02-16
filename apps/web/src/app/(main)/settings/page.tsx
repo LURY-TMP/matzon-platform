@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, FormEvent } from 'react';
+import { useState, useEffect, FormEvent } from 'react';
 import { useAuth } from '@/contexts/auth-context';
-import { usersApi } from '@/lib/api';
-import { Card, Button, Input, Badge } from '@/components/ui';
-import { User, Shield, Bell, LogOut } from 'lucide-react';
+import { usersApi, reputationApi } from '@/lib/api';
+import { Card, Button, Input, Badge, TrustBadge, ErrorState } from '@/components/ui';
+import { User, Shield, Bell, LogOut, Award, TrendingUp } from 'lucide-react';
 
 export default function SettingsPage() {
   const { user, logout } = useAuth();
@@ -13,6 +13,11 @@ export default function SettingsPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [reputation, setReputation] = useState<any>(null);
+
+  useEffect(() => {
+    reputationApi.me().then(setReputation).catch(() => {});
+  }, []);
 
   async function handleUpdate(e: FormEvent) {
     e.preventDefault();
@@ -62,6 +67,49 @@ export default function SettingsPage() {
           </div>
           <Button type="submit" isLoading={isLoading}>Save Changes</Button>
         </form>
+      </Card>
+
+      <Card hover={false}>
+        <div className="flex items-center gap-3 mb-6"><Award className="w-5 h-5 text-accent" /><h2 className="font-semibold">Reputation & Trust</h2></div>
+        {reputation ? (
+          <div className="space-y-4">
+            <div className="grid grid-cols-3 gap-4">
+              <div className="bg-white/[0.03] rounded-lg p-4 text-center">
+                <p className="font-display text-2xl font-bold text-accent">{Math.round(reputation.reputationScore)}</p>
+                <p className="text-xs text-white/40 mt-1">Reputation</p>
+              </div>
+              <div className="bg-white/[0.03] rounded-lg p-4 text-center">
+                <TrustBadge level={reputation.trustLevel} size="md" />
+                <p className="text-xs text-white/40 mt-2">Trust Level</p>
+              </div>
+              <div className="bg-white/[0.03] rounded-lg p-4 text-center">
+                <p className="font-display text-2xl font-bold text-white/60">{reputation.reportsReceived}</p>
+                <p className="text-xs text-white/40 mt-1">Reports</p>
+              </div>
+            </div>
+
+            {reputation.breakdown && reputation.breakdown.length > 0 && (
+              <div>
+                <p className="text-xs text-white/30 uppercase tracking-wider mb-3">Breakdown</p>
+                <div className="space-y-2">
+                  {reputation.breakdown.map((b: any) => (
+                    <div key={b.type} className="flex items-center justify-between text-sm">
+                      <span className="text-white/60">{b.type.replace(/_/g, ' ')}</span>
+                      <div className="flex items-center gap-3">
+                        <span className="text-xs text-white/30">{b.count}x</span>
+                        <span className={`font-medium ${b.totalValue >= 0 ? 'text-success' : 'text-danger'}`}>
+                          {b.totalValue >= 0 ? '+' : ''}{Math.round(b.totalValue)}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        ) : (
+          <p className="text-sm text-white/40">Loading reputation data...</p>
+        )}
       </Card>
 
       <Card hover={false}>

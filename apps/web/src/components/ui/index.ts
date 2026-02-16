@@ -6,3 +6,4 @@ export { Loading } from './loading';
 export { Skeleton, CardSkeleton, TableRowSkeleton } from './skeleton';
 export { EmptyState } from './empty-state';
 export { ErrorState } from './error-state';
+export { TrustBadge } from './trust-badge';

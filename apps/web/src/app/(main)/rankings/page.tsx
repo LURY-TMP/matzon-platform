@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useAuth } from '@/contexts/auth-context';
 import { usersApi } from '@/lib/api';
-import { Card, Badge, Button, TableRowSkeleton, EmptyState, ErrorState } from '@/components/ui';
+import { Card, Badge, Button, TableRowSkeleton, EmptyState, ErrorState, TrustBadge } from '@/components/ui';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 export default function RankingsPage() {
@@ -42,8 +42,8 @@ export default function RankingsPage() {
       </div>
 
       <Card hover={false} className="p-0 overflow-hidden">
-        <div className="hidden md:grid grid-cols-[60px_1fr_80px_80px_80px] gap-4 px-5 py-3 border-b border-border text-xs text-white/30 uppercase tracking-wider">
-          <span>Rank</span><span>Player</span><span className="text-right">Level</span><span className="text-right">XP</span><span className="text-right">WR</span>
+        <div className="hidden md:grid grid-cols-[60px_1fr_80px_80px_80px_80px] gap-4 px-5 py-3 border-b border-border text-xs text-white/30 uppercase tracking-wider">
+          <span>Rank</span><span>Player</span><span className="text-right">Level</span><span className="text-right">XP</span><span className="text-right">Trust</span><span className="text-right">WR</span>
         </div>
 
         {isLoading ? (
@@ -58,7 +58,7 @@ export default function RankingsPage() {
               const isMe = p.id === user?.id;
 
               return (
-                <div key={p.id} className={`grid grid-cols-[40px_1fr_auto] md:grid-cols-[60px_1fr_80px_80px_80px] gap-4 px-5 py-3.5 border-b border-border items-center ${isMe ? 'bg-accent/5 border-l-2 border-l-accent' : 'hover:bg-white/[0.02]'}`}>
+                <div key={p.id} className={`grid grid-cols-[40px_1fr_auto] md:grid-cols-[60px_1fr_80px_80px_80px_80px] gap-4 px-5 py-3.5 border-b border-border items-center ${isMe ? 'bg-accent/5 border-l-2 border-l-accent' : 'hover:bg-white/[0.02]'}`}>
                   <div className="flex items-center justify-center">
                     {rank <= 3 ? <span className="text-lg">{rank === 1 ? '🥇' : rank === 2 ? '🥈' : '🥉'}</span> : <span className="font-display text-sm font-bold text-white/30">{rank}</span>}
                   </div>
@@ -71,11 +71,16 @@ export default function RankingsPage() {
                         <span className="text-sm font-medium truncate">{p.username}</span>
                         {isMe && <Badge variant="accent">You</Badge>}
                       </div>
-                      <div className="md:hidden text-xs text-white/30 mt-0.5">Lv.{p.level} · {p.xp} XP · {wr}%</div>
+                      <div className="md:hidden text-xs text-white/30 mt-0.5 flex items-center gap-2">
+                        <span>Lv.{p.level}</span>
+                        <span>{p.xp} XP</span>
+                        <TrustBadge level={p.trustLevel || 'NEW'} />
+                      </div>
                     </div>
                   </div>
                   <div className="hidden md:block text-right text-sm">{p.level}</div>
                   <div className="hidden md:block text-right text-sm font-display font-bold text-accent">{p.xp.toLocaleString()}</div>
+                  <div className="hidden md:flex justify-end"><TrustBadge level={p.trustLevel || 'NEW'} /></div>
                   <div className="hidden md:flex justify-end"><Badge variant={wr >= 60 ? 'success' : wr >= 40 ? 'warning' : 'default'}>{wr}%</Badge></div>
                   <div className="md:hidden flex justify-end"><span className="font-display text-sm font-bold text-accent">{p.xp}</span></div>
                 </div>

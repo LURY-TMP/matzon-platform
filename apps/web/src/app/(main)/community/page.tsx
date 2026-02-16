@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { usersApi } from '@/lib/api';
-import { Card, Badge, Button, CardSkeleton, EmptyState, ErrorState } from '@/components/ui';
+import { Card, Button, CardSkeleton, EmptyState, ErrorState, TrustBadge } from '@/components/ui';
 import { Search, ChevronLeft, ChevronRight } from 'lucide-react';
 
 export default function CommunityPage() {
@@ -60,7 +60,10 @@ export default function CommunityPage() {
                   {p.username?.charAt(0).toUpperCase()}
                 </div>
                 <h3 className="text-sm font-semibold mb-0.5">{p.username}</h3>
-                <span className="text-xs text-white/30 mb-4">Level {p.level}</span>
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="text-xs text-white/30">Lv.{p.level}</span>
+                  <TrustBadge level={p.trustLevel || 'NEW'} />
+                </div>
                 <div className="grid grid-cols-3 gap-3 w-full px-2">
                   <div><p className="font-display text-sm font-bold text-accent">{p.xp}</p><p className="text-[10px] text-white/30 uppercase">XP</p></div>
                   <div><p className="font-display text-sm font-bold text-success">{wins}</p><p className="text-[10px] text-white/30 uppercase">Wins</p></div>
