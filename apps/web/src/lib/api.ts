@@ -151,3 +151,12 @@ export const matchesApi = {
   },
   getById: (id: string) => api(`/matches/${id}`, { skipAuth: true }),
 };
+
+export const feedApi = {
+  personal: (cursor?: string, limit = 20) =>
+    api<any>(`/feed?limit=${limit}${cursor ? `&cursor=${cursor}` : ''}`),
+  global: (cursor?: string, limit = 20) =>
+    api<any>(`/feed/global?limit=${limit}${cursor ? `&cursor=${cursor}` : ''}`, { skipAuth: true }),
+  userEvents: (userId: string, cursor?: string) =>
+    api<any>(`/feed/user/${userId}${cursor ? `?cursor=${cursor}` : ''}`, { skipAuth: true }),
+};

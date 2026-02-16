@@ -11,6 +11,7 @@ import { HealthModule } from './modules/health/health.module';
 import { GatewayModule } from './modules/gateway/gateway.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { SocialModule } from './modules/social/social.module';
+import { FeedModule } from './modules/feed/feed.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { SocialModule } from './modules/social/social.module';
     GatewayModule,
     NotificationsModule,
     SocialModule,
+    FeedModule,
   ],
 })
 export class AppModule {}

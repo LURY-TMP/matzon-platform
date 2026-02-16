@@ -2,6 +2,7 @@ import { Injectable, Logger, ConflictException, NotFoundException, BadRequestExc
 import { PrismaService } from '../../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { AppGateway } from '../gateway/app.gateway';
+import { FeedService } from '../feed/feed.service';
 
 @Injectable()
 export class SocialService {
@@ -11,6 +12,7 @@ export class SocialService {
     private readonly prisma: PrismaService,
     private readonly notifications: NotificationsService,
     private readonly gateway: AppGateway,
+    private readonly feed: FeedService,
   ) {}
 
   async follow(followerId: string, followingId: string) {
@@ -65,6 +67,14 @@ export class SocialService {
       message: `${follower?.username} started following you`,
       actorId: followerId,
       payload: { followerId, followerUsername: follower?.username },
+    });
+
+    await this.feed.createEvent({
+      actorId: followerId,
+      type: 'USER_FOLLOWED',
+      title: 'Started following',
+      summary: `${follower?.username} started following ${targetUser.username}`,
+      payload: { followingId, followingUsername: targetUser.username },
     });
 
     this.gateway.emitToUser(followingId, 'social:followed', {
@@ -123,13 +133,7 @@ export class SocialService {
       ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
       include: {
         follower: {
-          select: {
-            id: true,
-            username: true,
-            avatarUrl: true,
-            level: true,
-            xp: true,
-          },
+          select: { id: true, username: true, avatarUrl: true, level: true, xp: true },
         },
       },
     });
@@ -139,11 +143,7 @@ export class SocialService {
     const nextCursor = hasMore ? items[items.length - 1].id : null;
 
     return {
-      data: items.map((f) => ({
-        id: f.id,
-        user: f.follower,
-        followedAt: f.createdAt,
-      })),
+      data: items.map((f) => ({ id: f.id, user: f.follower, followedAt: f.createdAt })),
       nextCursor,
       hasMore,
     };
@@ -157,13 +157,7 @@ export class SocialService {
       ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
       include: {
         following: {
-          select: {
-            id: true,
-            username: true,
-            avatarUrl: true,
-            level: true,
-            xp: true,
-          },
+          select: { id: true, username: true, avatarUrl: true, level: true, xp: true },
         },
       },
     });
@@ -173,11 +167,7 @@ export class SocialService {
     const nextCursor = hasMore ? items[items.length - 1].id : null;
 
     return {
-      data: items.map((f) => ({
-        id: f.id,
-        user: f.following,
-        followedAt: f.createdAt,
-      })),
+      data: items.map((f) => ({ id: f.id, user: f.following, followedAt: f.createdAt })),
       nextCursor,
       hasMore,
     };
@@ -195,7 +185,6 @@ export class SocialService {
       this.isFollowing(currentUserId, targetUserId),
       this.isFollowing(targetUserId, currentUserId),
     ]);
-
     return { isFollowing, isFollowedBy, isMutual: isFollowing && isFollowedBy };
   }
 }
