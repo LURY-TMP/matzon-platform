@@ -21,6 +21,28 @@ enum UserStatus {
   SUSPENDED
 }
 
+enum TournamentStatus {
+  DRAFT
+  REGISTRATION
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum TournamentFormat {
+  SINGLE_ELIMINATION
+  DOUBLE_ELIMINATION
+  ROUND_ROBIN
+  SWISS
+}
+
+enum MatchStatus {
+  SCHEDULED
+  LIVE
+  COMPLETED
+  CANCELLED
+}
+
 model User {
   id            String     @id @default(uuid())
   username      String     @unique
@@ -35,8 +57,13 @@ model User {
   createdAt     DateTime   @default(now())
   updatedAt     DateTime   @updatedAt
 
-  profile       Profile?
-  refreshTokens RefreshToken[]
+  profile             Profile?
+  refreshTokens       RefreshToken[]
+  organizedTournaments Tournament[]
+  participations      TournamentParticipant[]
+  matchesAsPlayerOne  Match[] @relation("PlayerOne")
+  matchesAsPlayerTwo  Match[] @relation("PlayerTwo")
+  matchesWon          Match[] @relation("Winner")
 
   @@map("users")
 }
@@ -59,17 +86,87 @@ model Profile {
 }
 
 model RefreshToken {
-  id          String   @id @default(uuid())
-  token       String   @unique
+  id          String    @id @default(uuid())
+  token       String    @unique
   userId      String
   deviceId    String?
   expiresAt   DateTime
-  createdAt   DateTime @default(now())
+  createdAt   DateTime  @default(now())
   revokedAt   DateTime?
 
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([token])
   @@map("refresh_tokens")
+}
+
+model Tournament {
+  id              String              @id @default(uuid())
+  name            String
+  game            String
+  description     String?
+  format          TournamentFormat    @default(SINGLE_ELIMINATION)
+  status          TournamentStatus    @default(DRAFT)
+  maxPlayers      Int
+  prizePool       String?
+  rules           String?
+  startDate       DateTime
+  endDate         DateTime?
+  organizerId     String
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  organizer       User                @relation(fields: [organizerId], references: [id])
+  participants    TournamentParticipant[]
+  matches         Match[]
+
+  @@index([game])
+  @@index([status])
+  @@index([organizerId])
+  @@map("tournaments")
+}
+
+model TournamentParticipant {
+  id            String     @id @default(uuid())
+  tournamentId  String
+  userId        String
+  seed          Int?
+  placement     Int?
+  joinedAt      DateTime   @default(now())
+
+  tournament    Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  user          User       @relation(fields: [userId], references: [id])
+
+  @@unique([tournamentId, userId])
+  @@index([tournamentId])
+  @@map("tournament_participants")
+}
+
+model Match {
+  id            String      @id @default(uuid())
+  tournamentId  String?
+  game          String
+  round         Int?
+  status        MatchStatus @default(SCHEDULED)
+  playerOneId   String
+  playerTwoId   String
+  scoreOne      Int?
+  scoreTwo      Int?
+  winnerId      String?
+  startedAt     DateTime?
+  completedAt   DateTime?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  tournament    Tournament? @relation(fields: [tournamentId], references: [id])
+  playerOne     User        @relation("PlayerOne", fields: [playerOneId], references: [id])
+  playerTwo     User        @relation("PlayerTwo", fields: [playerTwoId], references: [id])
+  winner        User?       @relation("Winner", fields: [winnerId], references: [id])
+
+  @@index([tournamentId])
+  @@index([status])
+  @@index([playerOneId])
+  @@index([playerTwoId])
+  @@map("matches")
 }
