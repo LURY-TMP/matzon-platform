@@ -1,8 +1,9 @@
-import { Injectable, Logger, ConflictException, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, Logger, ConflictException, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { AppGateway } from '../gateway/app.gateway';
 import { FeedService } from '../feed/feed.service';
+import { ReputationService } from '../reputation/reputation.service';
 
 @Injectable()
 export class SocialService {
@@ -13,11 +14,17 @@ export class SocialService {
     private readonly notifications: NotificationsService,
     private readonly gateway: AppGateway,
     private readonly feed: FeedService,
+    private readonly reputation: ReputationService,
   ) {}
 
   async follow(followerId: string, followingId: string) {
     if (followerId === followingId) {
       throw new BadRequestException('Cannot follow yourself');
+    }
+
+    const canFollow = await this.reputation.canFollow(followerId);
+    if (!canFollow.allowed) {
+      throw new ForbiddenException(`Follow limit reached (${canFollow.current}/${canFollow.limit}). Increase your trust level to follow more.`);
     }
 
     const targetUser = await this.prisma.user.findUnique({
@@ -77,6 +84,9 @@ export class SocialService {
       payload: { followingId, followingUsername: targetUser.username },
     });
 
+    await this.reputation.addEvent(followingId, 'FOLLOW_RECEIVED', followerId);
+    await this.reputation.addEvent(followerId, 'FOLLOW_GIVEN', followingId);
+
     this.gateway.emitToUser(followingId, 'social:followed', {
       followerId,
       followerUsername: follower?.username,
@@ -133,7 +143,7 @@ export class SocialService {
       ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
       include: {
         follower: {
-          select: { id: true, username: true, avatarUrl: true, level: true, xp: true },
+          select: { id: true, username: true, avatarUrl: true, level: true, xp: true, trustLevel: true },
         },
       },
     });
@@ -157,7 +167,7 @@ export class SocialService {
       ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
       include: {
         following: {
-          select: { id: true, username: true, avatarUrl: true, level: true, xp: true },
+          select: { id: true, username: true, avatarUrl: true, level: true, xp: true, trustLevel: true },
         },
       },
     });

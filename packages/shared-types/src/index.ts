@@ -4,3 +4,4 @@ export * from './tournament';
 export * from './match';
 export * from './common';
 export * from './events';
+export * from './reputation';

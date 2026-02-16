@@ -68,19 +68,46 @@ enum FeedEventType {
   ACHIEVEMENT
 }
 
+enum ReputationEventType {
+  FOLLOW_RECEIVED
+  FOLLOW_GIVEN
+  MATCH_WIN
+  MATCH_LOSS
+  MATCH_PLAYED
+  TOURNAMENT_JOIN
+  TOURNAMENT_TOP3
+  TOURNAMENT_WIN
+  REPORT_RECEIVED
+  REPORT_VALIDATED
+  SPAM_DETECTED
+  ACCOUNT_AGE_BONUS
+  STREAK_BONUS
+}
+
+enum TrustLevel {
+  NEW
+  BASIC
+  TRUSTED
+  VETERAN
+  ELITE
+}
+
 model User {
-  id            String     @id @default(uuid())
-  username      String     @unique
-  email         String     @unique
-  passwordHash  String
-  role          UserRole   @default(USER)
-  status        UserStatus @default(ACTIVE)
-  avatarUrl     String?
-  bio           String?
-  level         Int        @default(1)
-  xp            Int        @default(0)
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
+  id                String     @id @default(uuid())
+  username          String     @unique
+  email             String     @unique
+  passwordHash      String
+  role              UserRole   @default(USER)
+  status            UserStatus @default(ACTIVE)
+  avatarUrl         String?
+  bio               String?
+  level             Int        @default(1)
+  xp                Int        @default(0)
+  reputationScore   Float      @default(0)
+  trustLevel        TrustLevel @default(NEW)
+  reportsReceived   Int        @default(0)
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
 
   profile             Profile?
   refreshTokens       RefreshToken[]
@@ -94,6 +121,7 @@ model User {
   following           Follow[] @relation("Followers")
   notifications       Notification[]
   feedEvents          FeedEvent[] @relation("FeedActor")
+  reputationEvents    ReputationEvent[] @relation("ReputationUser")
 
   @@map("users")
 }
@@ -178,6 +206,23 @@ model FeedEvent {
   @@index([actorId, createdAt(sort: Desc)])
   @@index([createdAt(sort: Desc)])
   @@map("feed_events")
+}
+
+model ReputationEvent {
+  id        String              @id @default(uuid())
+  userId    String
+  actorId   String?
+  type      ReputationEventType
+  value     Float
+  reason    String?
+  metadata  Json?
+  createdAt DateTime            @default(now())
+
+  user      User                @relation("ReputationUser", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([userId, type])
+  @@map("reputation_events")
 }
 
 model Tournament {
