@@ -1,7 +1,6 @@
 version: "3.9"
 
 services:
-  # ========== DATABASES ==========
   postgres:
     image: postgres:16-alpine
     container_name: matzon-postgres
@@ -38,7 +37,21 @@ services:
       timeout: 5s
       retries: 5
 
-  # ========== API ==========
+  redis:
+    image: redis:7-alpine
+    container_name: matzon-redis
+    restart: unless-stopped
+    command: redis-server --requirepass matzon_redis_2026 --maxmemory 256mb --maxmemory-policy allkeys-lru
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "matzon_redis_2026", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   api:
     build:
       context: .
@@ -52,6 +65,7 @@ services:
       API_PORT: 4000
       DATABASE_URL: postgresql://matzon:matzon_dev_2026@postgres:5432/matzon
       MONGODB_URI: mongodb://matzon:matzon_dev_2026@mongo:27017/matzon?authSource=admin
+      REDIS_URL: redis://:matzon_redis_2026@redis:6379
       JWT_SECRET: matzon-dev-secret-change-in-production
       CORS_ORIGIN: http://localhost:3000
     depends_on:
@@ -59,7 +73,10 @@ services:
         condition: service_healthy
       mongo:
         condition: service_healthy
+      redis:
+        condition: service_healthy
 
 volumes:
   postgres_data:
   mongo_data:
+  redis_data:
