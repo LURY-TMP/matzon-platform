@@ -1,0 +1,47 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build
+dist/
+build/
+.next/
+out/
+.turbo/
+
+# TypeScript
+*.tsbuildinfo
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Testing
+coverage/
+
+# Logs
+*.log
+
+# Editor
+.vscode/settings.json
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Prisma
+*.sql
+
+# Docker
+docker-compose.override.yml
+
+# Vercel
+.vercel/
+
+# Keys
+*.pem
+*.key
+*.cert
