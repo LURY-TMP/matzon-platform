@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from 'react';
 import { authApi, usersApi } from '@/lib/api';
+import { authStorage } from '@/lib/auth-storage';
 
 interface User {
   id: string;
@@ -16,8 +17,6 @@ interface User {
 
 interface AuthState {
   user: User | null;
-  accessToken: string | null;
-  refreshToken: string | null;
   isLoading: boolean;
   isAuthenticated: boolean;
 }
@@ -30,104 +29,65 @@ interface AuthContextType extends AuthState {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const TOKEN_KEY = 'matzon_access_token';
-const REFRESH_KEY = 'matzon_refresh_token';
-
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AuthState>({
     user: null,
-    accessToken: null,
-    refreshToken: null,
     isLoading: true,
     isAuthenticated: false,
   });
 
-  const setTokens = useCallback((accessToken: string, refreshToken: string) => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(TOKEN_KEY, accessToken);
-      localStorage.setItem(REFRESH_KEY, refreshToken);
-    }
+  const setAuthenticated = useCallback((user: User) => {
+    setState({ user, isLoading: false, isAuthenticated: true });
   }, []);
 
-  const clearTokens = useCallback(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem(TOKEN_KEY);
-      localStorage.removeItem(REFRESH_KEY);
-    }
+  const setUnauthenticated = useCallback(() => {
+    authStorage.clear();
+    setState({ user: null, isLoading: false, isAuthenticated: false });
   }, []);
 
-  const fetchUser = useCallback(async (token: string) => {
+  const fetchUser = useCallback(async () => {
     try {
-      const user = await usersApi.me(token) as User;
-      setState({
-        user,
-        accessToken: token,
-        refreshToken: localStorage.getItem(REFRESH_KEY),
-        isLoading: false,
-        isAuthenticated: true,
-      });
+      const user = await usersApi.me() as User;
+      setAuthenticated(user);
     } catch {
-      clearTokens();
-      setState({
-        user: null,
-        accessToken: null,
-        refreshToken: null,
-        isLoading: false,
-        isAuthenticated: false,
-      });
+      setUnauthenticated();
     }
-  }, [clearTokens]);
+  }, [setAuthenticated, setUnauthenticated]);
 
   useEffect(() => {
-    const token = localStorage.getItem(TOKEN_KEY);
-    if (token) {
-      fetchUser(token);
+    if (authStorage.hasTokens()) {
+      fetchUser();
     } else {
       setState((prev) => ({ ...prev, isLoading: false }));
     }
   }, [fetchUser]);
 
+  useEffect(() => {
+    const handleExpired = () => setUnauthenticated();
+    window.addEventListener('auth:expired', handleExpired);
+    return () => window.removeEventListener('auth:expired', handleExpired);
+  }, [setUnauthenticated]);
+
   const login = useCallback(async (email: string, password: string) => {
-    const res = await authApi.login({ email, password }) as any;
-    setTokens(res.accessToken, res.refreshToken);
-    setState({
-      user: res.user,
-      accessToken: res.accessToken,
-      refreshToken: res.refreshToken,
-      isLoading: false,
-      isAuthenticated: true,
-    });
-  }, [setTokens]);
+    const res = await authApi.login({ email, password });
+    authStorage.setTokens(res.accessToken, res.refreshToken);
+    setAuthenticated(res.user);
+  }, [setAuthenticated]);
 
   const register = useCallback(async (username: string, email: string, password: string) => {
-    const res = await authApi.register({ username, email, password }) as any;
-    setTokens(res.accessToken, res.refreshToken);
-    setState({
-      user: res.user,
-      accessToken: res.accessToken,
-      refreshToken: res.refreshToken,
-      isLoading: false,
-      isAuthenticated: true,
-    });
-  }, [setTokens]);
+    const res = await authApi.register({ username, email, password });
+    authStorage.setTokens(res.accessToken, res.refreshToken);
+    setAuthenticated(res.user);
+  }, [setAuthenticated]);
 
   const logout = useCallback(async () => {
     try {
-      if (state.accessToken) {
-        await authApi.logout(state.accessToken);
-      }
+      await authApi.logout();
     } catch {
       // Silent fail
     }
-    clearTokens();
-    setState({
-      user: null,
-      accessToken: null,
-      refreshToken: null,
-      isLoading: false,
-      isAuthenticated: false,
-    });
-  }, [state.accessToken, clearTokens]);
+    setUnauthenticated();
+  }, [setUnauthenticated]);
 
   return (
     <AuthContext.Provider value={{ ...state, login, register, logout }}>
