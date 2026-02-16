@@ -1,0 +1,44 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html { scrollbar-width: none; }
+html::-webkit-scrollbar { display: none; }
+
+body {
+  background: #0A0D12;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  color: #fff;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+::selection {
+  background: rgba(108, 92, 231, 0.3);
+  color: #fff;
+}
+
+@layer components {
+  .card {
+    @apply bg-bg-card rounded-lg border border-border p-5 transition-all duration-300;
+  }
+  .card:hover {
+    @apply bg-bg-hover border-border-solid;
+  }
+  .btn-primary {
+    @apply bg-accent hover:bg-accent-hover text-white font-semibold px-6 py-3 rounded-md transition-all duration-200;
+  }
+  .btn-secondary {
+    @apply bg-bg-card hover:bg-bg-hover text-white font-medium px-6 py-3 rounded-md border border-border transition-all duration-200;
+  }
+  .text-muted {
+    @apply text-white/60;
+  }
+  .text-faint {
+    @apply text-white/35;
+  }
+}
