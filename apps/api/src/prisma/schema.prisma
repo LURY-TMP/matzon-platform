@@ -43,6 +43,19 @@ enum MatchStatus {
   CANCELLED
 }
 
+enum NotificationType {
+  TOURNAMENT_JOINED
+  TOURNAMENT_STARTED
+  TOURNAMENT_COMPLETED
+  MATCH_SCHEDULED
+  MATCH_STARTED
+  MATCH_COMPLETED
+  RANK_CHANGED
+  FOLLOW_NEW
+  ACHIEVEMENT_UNLOCKED
+  SYSTEM_ANNOUNCEMENT
+}
+
 model User {
   id            String     @id @default(uuid())
   username      String     @unique
@@ -64,6 +77,10 @@ model User {
   matchesAsPlayerOne  Match[] @relation("PlayerOne")
   matchesAsPlayerTwo  Match[] @relation("PlayerTwo")
   matchesWon          Match[] @relation("Winner")
+
+  followers           Follow[] @relation("Following")
+  following           Follow[] @relation("Followers")
+  notifications       Notification[]
 
   @@map("users")
 }
@@ -99,6 +116,39 @@ model RefreshToken {
   @@index([userId])
   @@index([token])
   @@map("refresh_tokens")
+}
+
+model Follow {
+  id          String   @id @default(uuid())
+  followerId  String
+  followingId String
+  createdAt   DateTime @default(now())
+
+  follower    User @relation("Followers", fields: [followerId], references: [id], onDelete: Cascade)
+  following   User @relation("Following", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@unique([followerId, followingId])
+  @@index([followerId, createdAt(sort: Desc)])
+  @@index([followingId, createdAt(sort: Desc)])
+  @@map("follows")
+}
+
+model Notification {
+  id        String           @id @default(uuid())
+  userId    String
+  type      NotificationType
+  title     String
+  message   String
+  actorId   String?
+  payload   Json?
+  read      Boolean          @default(false)
+  createdAt DateTime         @default(now())
+
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, read, createdAt(sort: Desc)])
+  @@index([userId, createdAt(sort: Desc)])
+  @@map("notifications")
 }
 
 model Tournament {

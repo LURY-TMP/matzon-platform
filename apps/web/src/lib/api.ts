@@ -108,6 +108,25 @@ export const usersApi = {
   getByUsername: (username: string) => api(`/users/${username}`, { skipAuth: true }),
 };
 
+export const socialApi = {
+  follow: (userId: string) => api(`/users/${userId}/follow`, { method: 'POST' }),
+  unfollow: (userId: string) => api(`/users/${userId}/follow`, { method: 'DELETE' }),
+  getFollowers: (userId: string, cursor?: string) =>
+    api<any>(`/users/${userId}/followers${cursor ? `?cursor=${cursor}` : ''}`),
+  getFollowing: (userId: string, cursor?: string) =>
+    api<any>(`/users/${userId}/following${cursor ? `?cursor=${cursor}` : ''}`),
+  getRelationship: (userId: string) =>
+    api<{ isFollowing: boolean; isFollowedBy: boolean; isMutual: boolean }>(`/users/${userId}/relationship`),
+};
+
+export const notificationsApi = {
+  list: (cursor?: string, limit = 20) =>
+    api<any>(`/notifications?limit=${limit}${cursor ? `&cursor=${cursor}` : ''}`),
+  unreadCount: () => api<{ count: number }>('/notifications/unread-count'),
+  markRead: (id: string) => api(`/notifications/${id}/read`, { method: 'PATCH' }),
+  markAllRead: () => api('/notifications/read-all', { method: 'PATCH' }),
+};
+
 export const tournamentsApi = {
   list: (params?: { game?: string; status?: string; page?: number }) => {
     const query = new URLSearchParams();

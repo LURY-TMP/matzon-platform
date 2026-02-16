@@ -9,6 +9,8 @@ import { TournamentsModule } from './modules/tournaments/tournaments.module';
 import { MatchesModule } from './modules/matches/matches.module';
 import { HealthModule } from './modules/health/health.module';
 import { GatewayModule } from './modules/gateway/gateway.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
+import { SocialModule } from './modules/social/social.module';
 
 @Module({
   imports: [
@@ -24,6 +26,8 @@ import { GatewayModule } from './modules/gateway/gateway.module';
     MatchesModule,
     HealthModule,
     GatewayModule,
+    NotificationsModule,
+    SocialModule,
   ],
 })
 export class AppModule {}
