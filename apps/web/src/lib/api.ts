@@ -166,3 +166,25 @@ export const reputationApi = {
   getUser: (userId: string) => api<any>(`/reputation/user/${userId}`, { skipAuth: true }),
   followLimit: () => api<{ allowed: boolean; limit: number; current: number }>('/reputation/me/follow-limit'),
 };
+
+export const reportsApi = {
+  create: (data: { targetUserId?: string; targetType: string; targetId?: string; reason: string; description?: string }) =>
+    api('/reports', { method: 'POST', body: data }),
+};
+
+export const adminApi = {
+  pendingReports: (cursor?: string, limit = 20) =>
+    api<any>(`/admin/reports?limit=${limit}${cursor ? `&cursor=${cursor}` : ''}`),
+  reportStats: () => api<any>('/admin/reports/stats'),
+  resolveReport: (id: string, data: { status: 'CONFIRMED' | 'REJECTED'; note?: string }) =>
+    api(`/admin/reports/${id}/resolve`, { method: 'PATCH', body: data }),
+  banUser: (id: string, reason: string) =>
+    api(`/admin/users/${id}/ban`, { method: 'POST', body: { reason } }),
+  suspendUser: (id: string, reason: string, days: number) =>
+    api(`/admin/users/${id}/suspend`, { method: 'POST', body: { reason, days } }),
+  reinstateUser: (id: string) =>
+    api(`/admin/users/${id}/reinstate`, { method: 'POST' }),
+  auditLogs: (limit = 50) => api<any>(`/admin/audit?limit=${limit}`),
+  auditByTarget: (id: string, cursor?: string) =>
+    api<any>(`/admin/audit/target/${id}${cursor ? `?cursor=${cursor}` : ''}`),
+};

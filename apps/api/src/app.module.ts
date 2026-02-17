@@ -13,6 +13,8 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
 import { SocialModule } from './modules/social/social.module';
 import { FeedModule } from './modules/feed/feed.module';
 import { ReputationModule } from './modules/reputation/reputation.module';
+import { AuditModule } from './modules/audit/audit.module';
+import { ModerationModule } from './modules/moderation/moderation.module';
 
 @Module({
   imports: [
@@ -32,6 +34,8 @@ import { ReputationModule } from './modules/reputation/reputation.module';
     SocialModule,
     FeedModule,
     ReputationModule,
+    AuditModule,
+    ModerationModule,
   ],
 })
 export class AppModule {}

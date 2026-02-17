@@ -7,17 +7,8 @@ import { useNotifications } from '@/hooks/use-notifications';
 import { Button } from '@/components/ui';
 import { cn } from '@/lib/cn';
 import {
-  Menu,
-  X,
-  Trophy,
-  Swords,
-  Users,
-  MessageSquare,
-  BarChart3,
-  Settings,
-  LogOut,
-  Home,
-  Bell,
+  Menu, X, Trophy, Swords, Users, MessageSquare,
+  BarChart3, Settings, LogOut, Home, Bell, Shield,
 } from 'lucide-react';
 
 const navItems = [
@@ -35,6 +26,8 @@ export function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
 
+  const isAdmin = user?.role === 'ADMIN' || user?.role === 'MODERATOR';
+
   return (
     <header className="sticky top-0 z-50 bg-bg/80 backdrop-blur-xl border-b border-border">
       <div className="mx-auto max-w-7xl px-4 h-16 flex items-center justify-between">
@@ -47,25 +40,24 @@ export function Header() {
 
         <nav className="hidden md:flex items-center gap-1">
           {navItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="flex items-center gap-1.5 px-3 py-2 text-sm text-white/60 hover:text-white rounded-md hover:bg-white/5 transition-all duration-200"
-            >
-              <item.icon className="w-4 h-4" />
-              {item.label}
+            <Link key={item.href} href={item.href}
+              className="flex items-center gap-1.5 px-3 py-2 text-sm text-white/60 hover:text-white rounded-md hover:bg-white/5 transition-all duration-200">
+              <item.icon className="w-4 h-4" />{item.label}
             </Link>
           ))}
+          {isAdmin && (
+            <Link href="/admin"
+              className="flex items-center gap-1.5 px-3 py-2 text-sm text-warning/70 hover:text-warning rounded-md hover:bg-warning/5 transition-all duration-200">
+              <Shield className="w-4 h-4" />Admin
+            </Link>
+          )}
         </nav>
 
         <div className="flex items-center gap-3">
           {isAuthenticated ? (
             <div className="hidden md:flex items-center gap-3">
               <div className="relative">
-                <button
-                  onClick={() => setNotifOpen(!notifOpen)}
-                  className="relative text-white/50 hover:text-white transition-colors p-1"
-                >
+                <button onClick={() => setNotifOpen(!notifOpen)} className="relative text-white/50 hover:text-white transition-colors p-1">
                   <Bell className="w-5 h-5" />
                   {unreadCount > 0 && (
                     <span className="absolute -top-1 -right-1 w-4 h-4 bg-danger rounded-full flex items-center justify-center text-[10px] font-bold text-white">
@@ -79,61 +71,42 @@ export function Header() {
                     <div className="flex items-center justify-between px-4 py-3 border-b border-border">
                       <span className="text-sm font-semibold">Notifications</span>
                       {unreadCount > 0 && (
-                        <button
-                          onClick={markAllAsRead}
-                          className="text-xs text-accent hover:text-accent-hover transition-colors"
-                        >
-                          Mark all read
-                        </button>
+                        <button onClick={markAllAsRead} className="text-xs text-accent hover:text-accent-hover transition-colors">Mark all read</button>
                       )}
                     </div>
                     <div className="max-h-80 overflow-y-auto">
                       {notifications.length > 0 ? (
                         notifications.slice(0, 10).map((n: any) => (
-                          <button
-                            key={n.id}
-                            onClick={() => { markAsRead(n.id); setNotifOpen(false); }}
-                            className={cn(
-                              'w-full text-left px-4 py-3 border-b border-border hover:bg-white/[0.02] transition-colors',
-                              !n.read && 'bg-accent/5',
-                            )}
-                          >
+                          <button key={n.id} onClick={() => { markAsRead(n.id); setNotifOpen(false); }}
+                            className={cn('w-full text-left px-4 py-3 border-b border-border hover:bg-white/[0.02] transition-colors', !n.read && 'bg-accent/5')}>
                             <div className="flex items-start gap-3">
                               {!n.read && <span className="w-2 h-2 rounded-full bg-accent mt-1.5 shrink-0" />}
                               <div className="min-w-0">
                                 <p className="text-sm font-medium truncate">{n.title}</p>
                                 <p className="text-xs text-white/40 truncate">{n.message}</p>
                                 <p className="text-[10px] text-white/20 mt-1">
-                                  {new Date(n.createdAt).toLocaleDateString('en-US', {
-                                    month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
-                                  })}
+                                  {new Date(n.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                                 </p>
                               </div>
                             </div>
                           </button>
                         ))
                       ) : (
-                        <div className="px-4 py-8 text-center text-sm text-white/30">
-                          No notifications yet
-                        </div>
+                        <div className="px-4 py-8 text-center text-sm text-white/30">No notifications yet</div>
                       )}
                     </div>
                   </div>
                 )}
               </div>
 
-              <Link href="/settings" className="text-white/50 hover:text-white transition-colors">
-                <Settings className="w-5 h-5" />
-              </Link>
+              <Link href="/settings" className="text-white/50 hover:text-white transition-colors"><Settings className="w-5 h-5" /></Link>
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center text-accent text-xs font-bold">
                   {user?.username?.charAt(0).toUpperCase()}
                 </div>
                 <span className="text-sm font-medium">{user?.username}</span>
               </div>
-              <button onClick={logout} className="text-white/40 hover:text-danger transition-colors">
-                <LogOut className="w-4 h-4" />
-              </button>
+              <button onClick={logout} className="text-white/40 hover:text-danger transition-colors"><LogOut className="w-4 h-4" /></button>
             </div>
           ) : (
             <div className="hidden md:flex items-center gap-2">
@@ -142,10 +115,7 @@ export function Header() {
             </div>
           )}
 
-          <button
-            onClick={() => setMenuOpen(!menuOpen)}
-            className="md:hidden text-white/70 hover:text-white p-2"
-          >
+          <button onClick={() => setMenuOpen(!menuOpen)} className="md:hidden text-white/70 hover:text-white p-2">
             {menuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
         </div>
@@ -155,30 +125,28 @@ export function Header() {
         <div className="md:hidden bg-bg border-t border-border">
           <div className="px-4 py-4 grid grid-cols-3 gap-2">
             {navItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={() => setMenuOpen(false)}
-                className="flex flex-col items-center gap-1.5 p-3 rounded-lg text-white/60 hover:text-white hover:bg-white/5 transition-all"
-              >
-                <item.icon className="w-5 h-5" />
-                <span className="text-xs">{item.label}</span>
+              <Link key={item.href} href={item.href} onClick={() => setMenuOpen(false)}
+                className="flex flex-col items-center gap-1.5 p-3 rounded-lg text-white/60 hover:text-white hover:bg-white/5 transition-all">
+                <item.icon className="w-5 h-5" /><span className="text-xs">{item.label}</span>
               </Link>
             ))}
+            {isAdmin && (
+              <Link href="/admin" onClick={() => setMenuOpen(false)}
+                className="flex flex-col items-center gap-1.5 p-3 rounded-lg text-warning/60 hover:text-warning hover:bg-warning/5 transition-all">
+                <Shield className="w-5 h-5" /><span className="text-xs">Admin</span>
+              </Link>
+            )}
           </div>
           {isAuthenticated && unreadCount > 0 && (
             <div className="px-4 pb-2">
               <div className="flex items-center gap-2 px-3 py-2 bg-accent/5 rounded-md text-sm text-accent">
-                <Bell className="w-4 h-4" />
-                <span>{unreadCount} unread notification{unreadCount > 1 ? 's' : ''}</span>
+                <Bell className="w-4 h-4" /><span>{unreadCount} unread notification{unreadCount > 1 ? 's' : ''}</span>
               </div>
             </div>
           )}
           <div className="px-4 pb-4 flex gap-2">
             {isAuthenticated ? (
-              <Button variant="danger" size="sm" className="w-full" onClick={() => { logout(); setMenuOpen(false); }}>
-                Log Out
-              </Button>
+              <Button variant="danger" size="sm" className="w-full" onClick={() => { logout(); setMenuOpen(false); }}>Log Out</Button>
             ) : (
               <>
                 <Link href="/login" className="flex-1" onClick={() => setMenuOpen(false)}>
