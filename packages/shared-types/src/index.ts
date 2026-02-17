@@ -5,3 +5,4 @@ export * from './match';
 export * from './common';
 export * from './events';
 export * from './reputation';
+export * from './moderation';
